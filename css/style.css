@@ -1,7 +1,18 @@
+@font-face {
+  font-family: BelweBold;
+  src: url(../fonts/BelweBoldBT.ttf);
+}
+
+@font-face {
+  font-family: BelweLight;
+  src: url(../fonts/BelweLightBT.ttf);
+}
+
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+  font-family: BelweLight;
 }
 
 body {
@@ -10,7 +21,8 @@ body {
   background-image: url('../img/background.jpg');
   background-repeat: repeat;
   padding: 10px;
-  overflow: hidden;
+  /* overflow: hidden; */
+  padding: 1em;
 }
 
 .main-wrapper {
@@ -19,16 +31,17 @@ body {
   gap: 1em;
   width: 95%;
   height: 95%;
-  margin: 20px auto;
+  margin: 10px auto;
 }
 
 .info-panel {
   display: block;
   width: auto;
   height: 100%;
-  margin: 0 5x;
+  /* margin: 0 5px; */
   border: 5px solid black;
-  border-radius: 3em;
+  border-radius: 3rem;
+  font-size: 50px;
 }
 
 .cards-wrapper {
@@ -41,7 +54,7 @@ body {
   gap: 1em;
   border: 5px solid black;
   border-radius: 3em;
-  padding: 2em;
+  padding: 1rem;
 }
 
 /* entire container, keeps perspective */
@@ -49,12 +62,11 @@ body {
   perspective: 1000px;
   width: 100%;
   height: 100%;
-  border: 1px solid black;
+  /* border: 1px solid black; */
   place-self: center;
 }
 /* flip the pane when hovered */
-.flip-container:hover .flipper,
-.flip-container.hover .flipper {
+.flip-container:hover .flipper {
   transform: rotateY(180deg);
 }
 
@@ -105,6 +117,7 @@ body {
 
 @media screen and (max-width: 750px) {
   .main-wrapper {
+    /* margin-top: 50px; */
     display: grid;
     grid-template-columns: 1fr;
     grid-template-rows: 1fr 2fr;
