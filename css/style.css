@@ -19,11 +19,12 @@ body {
 }
 
 .cards-wrapper {
-  display: grid;
   width: 100%;
   height: 100%;
+  display: grid;
   grid-template-columns: repeat(5, 1fr);
   grid-template-rows: repeat(2, 1fr);
+  place-items: center;
 }
 
 .info-panel {
@@ -49,8 +50,9 @@ body {
   height: auto;
 }
 
-.cardback {
-  max-width: 100%;
+.cardback,
+.hero {
+  width: 100%;
   height: auto;
 }
 
