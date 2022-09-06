@@ -52,7 +52,7 @@ body {
   grid-template-rows: repeat(4, 1fr);
   place-items: center;
   gap: 1em;
-  border: 5px solid black;
+  border: 5px solid rgb(143, 129, 95);
   border-radius: 3em;
   padding: 1rem;
 }
@@ -66,7 +66,11 @@ body {
   place-self: center;
 }
 /* flip the pane when hovered */
-.flip-container:hover .flipper {
+/* .flip-container:hover .flipper {
+  transform: rotateY(180deg);
+} */
+
+.is-flipped {
   transform: rotateY(180deg);
 }
 
