@@ -19,33 +19,33 @@ function shuffle(array) {
   }
 }
 
-//lets shuffle initial array
-shuffle(allHeroes);
-
-//lets get two copies of 6 random heroes out of 10
-const usedHeroes = [...allHeroes.slice(4), ...allHeroes.slice(4)];
-
-//and shuffle them again
-shuffle(usedHeroes);
-
 const cardsWrapper = document.querySelector('.cards-wrapper');
 const infoWrapper = document.querySelector('.info-wrapper');
 const opponents = document.querySelector('.opponents');
-const restart = document.querySelector('.restart');
-let stack = [];
-let pairsCounter = 0;
-let movesCounter = 0;
+const message = document.querySelector('.message');
+let stack;
+let pairsCounter;
+let movesCounter;
+let lastCardClickedId;
+let usedHeroes;
 
 const init = () => {
+  shuffle(allHeroes);
+  usedHeroes = [...allHeroes.slice(4), ...allHeroes.slice(4)];
+  shuffle(usedHeroes);
+  stack = [];
+  pairsCounter = 0;
+  movesCounter = 0;
+  lastCardClickedId = -1;
   let cards = '';
-  for (hero of usedHeroes) {
-    cards += `<div class='flip-container' data-hero="${hero.id}">
+  for (let i = 0; i < usedHeroes.length; i++) {
+    cards += `<div class='flip-container' data-hero="${usedHeroes[i].id}" data-id="${i}">
   <div class='flipper'>
     <div class='front'>
-      <img class='cardback' src='./img/pie-cardback.png' draggable="false" alt="${hero.id}"/>
+      <img class='cardback' src='./img/pie-cardback.png' draggable="false" alt="${usedHeroes[i].id}"/>
     </div>
     <div class='back'>
-    <img class='hero' src='./img/${hero.id}.webp' draggable="false" alt="${hero.id}"/>
+    <img class='hero' src='./img/${usedHeroes[i].id}.webp' draggable="false" alt="${usedHeroes[i].id}"/>
     </div>
   </div>
 </div>`;
@@ -65,9 +65,12 @@ const init = () => {
 
   cardsWrapper.innerHTML = cards;
   opponents.innerHTML = opposition;
+  message.innerText = `Good luck!`;
 };
 
-init();
+const endGame = () => {
+  message.innerText = `Congratulation! You won in ${movesCounter} moves!`;
+};
 
 const isStackFull = (stack) => stack.length === 3;
 const isClickedItemIsACard = (item) => item.classList.contains('cardback');
@@ -83,6 +86,20 @@ const areTwoCardsInStackEqual = (stack) => {
     stack[1].closest('.flip-container').dataset.hero
   );
 };
+const areBothCardsFlipped = (card1, card2) => {
+  return (
+    card1.closest('.flipper').classList.contains('is-flipped') &&
+    card2.closest('.flipper').classList.contains('is-flipped')
+  );
+};
+
+const areTwoCardsIdentical = (cardOne, cardTwo) => {
+  return (
+    cardOne?.closest('.flip-container').dataset.id ===
+    cardTwo.closest('.flip-container').dataset.id
+  );
+};
+
 const hideEqualCards = (stack) => {
   stack.forEach((item) => item.closest('.flipper').classList.add('hidden'));
 };
@@ -97,29 +114,55 @@ const makeHeroInListOpaqueAndDefeated = (stack) => {
 
 const clearStack = (stack) => (stack = []);
 
-cardsWrapper.addEventListener('click', ({ target }) => {
+const handleClick = ({ target }) => {
   if (isClickedItemIsACard(target)) {
-    addCardToStack(stack, target);
+    movesCounter++;
+    if (
+      lastCardClickedId === target.closest('.flip-container').dataset.id &&
+      lastCardClickedId ===
+        stack[stack.length - 1].closest('.flip-container').dataset.id
+    ) {
+      console.log('Same card');
+    } else {
+      addCardToStack(stack, target);
+      lastCardClickedId = target.closest('.flip-container').dataset.id;
+    }
     flipCard(target);
     if (isStackFull(stack)) {
       unflipCard(stack[0]);
       deleteFirstCardInStack(stack);
     }
     if (isThereAPairOfCardsInStack(stack)) {
-      if (areTwoCardsInStackEqual(stack)) {
+      if (
+        areTwoCardsInStackEqual(stack) &&
+        areBothCardsFlipped(stack[stack.length - 1], stack[stack.length - 2])
+      ) {
         setTimeout(() => {
           hideEqualCards(stack);
           makeHeroInListOpaqueAndDefeated(stack);
           clearStack(stack);
-        }, 600);
+        }, 1000);
+        if (++pairsCounter === 6) {
+          endGame();
+        }
       } else {
         stack.forEach((item) =>
           setTimeout(() => {
-            item.closest('.flipper').classList.remove('is-flipped');
-            stack = [];
-          }, 600)
+            unflipCard(item);
+          }, 1000)
         );
+        clearStack(stack);
       }
     }
   }
-});
+  console.log(`moves: ${movesCounter}`);
+  console.log(`pairs: ${pairsCounter}`);
+  console.log(
+    stack.map((item) => item.closest('.flip-container').dataset.hero)
+  );
+};
+
+document.addEventListener('DOMContentLoaded', init);
+document.querySelector('.try-again').addEventListener('click', init);
+
+cardsWrapper.addEventListener('click', handleClick);

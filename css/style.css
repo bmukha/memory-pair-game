@@ -161,6 +161,19 @@ body {
   display: none;
 }
 
+.try-again {
+  border: 5px solid rgb(143, 129, 95);
+  background: rgba(143, 129, 95, 0.3);
+  border-radius: 1em;
+  font-size: 1em;
+  margin-top: 1em;
+  cursor: pointer;
+}
+
+.try-again:hover {
+  background: rgba(143, 129, 95, 0.7);
+}
+
 .opaque :not(.defeated) {
   opacity: 0.3;
 }
