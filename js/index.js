@@ -20,20 +20,14 @@ function shuffle(array) {
 }
 
 const cardsWrapper = document.querySelector('.cards-wrapper');
-const infoWrapper = document.querySelector('.info-wrapper');
 const opponents = document.querySelector('.opponents');
 const message = document.querySelector('.message');
-// let queue;
 let pairsCounter;
 let movesCounter;
-let lastCardClickedId;
 let usedHeroes;
 
 const queue = {
   cards: [],
-  isEmpty() {
-    return this.cards.length === 0;
-  },
   isFull() {
     return this.cards.length > 1;
   },
@@ -42,9 +36,6 @@ const queue = {
   },
   addCard(card) {
     this.cards.push(card);
-  },
-  deleteOldestCard() {
-    this.cards.shift();
   },
   unflipAndDeleteOldestCard() {
     this.cards[0]?.closest('.flipper').classList.remove('is-flipped');
@@ -56,18 +47,6 @@ const queue = {
         ?.closest('.flipper')
         .classList.remove('is-flipped');
     }, 2000);
-  },
-  unflipAndDeleteOldestCardAfterTwoSeconds() {
-    setTimeout(() => {
-      this.unflipAndDeleteOldestCard();
-    }, 2000);
-  },
-  print() {
-    console.log(
-      this.cards.map(
-        (card) => card?.closest('.flip-container').dataset.hero || 'fuck'
-      )
-    );
   },
   isCardFlipped(card) {
     return card?.closest('.flipper').classList.contains('is-flipped');
@@ -105,10 +84,9 @@ const init = () => {
   shuffle(allHeroes);
   usedHeroes = [...allHeroes.slice(4), ...allHeroes.slice(4)];
   shuffle(usedHeroes);
-  queue.clear;
+  queue.clear();
   pairsCounter = 0;
   movesCounter = 0;
-  lastCardClickedId = -1;
   let cards = '';
   for (let i = 0; i < usedHeroes.length; i++) {
     cards += `<div class='flip-container' data-hero="${usedHeroes[i].id}" data-id="${i}">
@@ -149,35 +127,27 @@ const flipCard = (card) => card.closest('.flipper').classList.add('is-flipped');
 const unflipCardAfterTwoSeconds = (card) =>
   setTimeout(() => {
     card.closest('.flipper').classList.remove('is-flipped');
-    // console.log('removed');
   }, 2000);
 
 const handleClick = ({ target }) => {
   if (!isClickedItemACard(target)) return;
   movesCounter++;
   if (queue.isFull()) {
-    console.log('queue full');
     queue.unflipAndDeleteOldestCard();
   }
   flipCard(target);
   queue.addCard(target);
   unflipCardAfterTwoSeconds(target);
   if (queue.containsTwoFlippedCards() && queue.containsTwoCardsOfSameKind()) {
-    console.log('same!!!');
     setTimeout(() => {
       queue.hideEqualCards();
       queue.makeDefeatedHeroOpaque();
       queue.clear();
+      if (++pairsCounter === 6) {
+        endGame();
+      }
     }, 700);
   }
-  // else {
-  //   queue.unflipAndDeleteOldestCard();
-  //   queue.addCard(target);
-  //   flipCard(target);
-  //   unflipCardAfterTwoSeconds(target);
-  // }
-
-  queue.print();
 };
 
 document.addEventListener('DOMContentLoaded', init);
