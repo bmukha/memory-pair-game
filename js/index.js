@@ -24,7 +24,6 @@ const opponents = document.querySelector('.opponents');
 const message = document.querySelector('.message');
 let pairsCounter;
 let movesCounter;
-let usedHeroes;
 
 const queue = {
   cards: [],
@@ -40,13 +39,6 @@ const queue = {
   unflipAndDeleteOldestCard() {
     this.cards[0]?.closest('.flipper').classList.remove('is-flipped');
     this.cards.shift();
-  },
-  unflipYoungestCardAfterTwoSeconds() {
-    setTimeout(() => {
-      this.cards[this.cards.length - 1]
-        ?.closest('.flipper')
-        .classList.remove('is-flipped');
-    }, 2000);
   },
   isCardFlipped(card) {
     return card?.closest('.flipper').classList.contains('is-flipped');
@@ -69,20 +61,11 @@ const queue = {
       card.closest('.flipper').classList.add('hidden')
     );
   },
-  makeDefeatedHeroOpaque() {
-    const defeatedHero = document.querySelector(
-      `[data-hero-list="${
-        this.cards[0].closest('.flip-container').dataset.hero
-      }"]`
-    );
-    defeatedHero.classList.add('opaque');
-    defeatedHero.lastElementChild.classList.remove('hidden');
-  },
 };
 
 const init = () => {
   shuffle(allHeroes);
-  usedHeroes = [...allHeroes.slice(4), ...allHeroes.slice(4)];
+  const usedHeroes = [...allHeroes.slice(4), ...allHeroes.slice(4)];
   shuffle(usedHeroes);
   queue.clear();
   pairsCounter = 0;
@@ -105,7 +88,7 @@ const init = () => {
   const heroList = [...new Set(usedHeroes)].sort((a, b) =>
     a.name > b.name ? 1 : b.name > a.name ? -1 : 0
   );
-  for (hero of heroList) {
+  for (let hero of heroList) {
     opposition += `<li class='hero-list' data-hero-list="${hero.id}">
   <img class='logo' src='./img/${hero.id}-logo.png' alt='${hero.id}' />
   <span class='name'>${hero.name}</span>
@@ -120,6 +103,14 @@ const init = () => {
 
 const endGame = () => {
   message.innerText = `Congratulation! You won in ${movesCounter} moves!`;
+};
+
+const makeDefeatedHeroOpaque = (queue) => {
+  const defeatedHero = document.querySelector(
+    `[data-hero-list="${queue[0].closest('.flip-container').dataset.hero}"]`
+  );
+  defeatedHero.classList.add('opaque');
+  defeatedHero.lastElementChild.classList.remove('hidden');
 };
 
 const isClickedItemACard = (item) => item.classList.contains('cardback');
@@ -141,7 +132,7 @@ const handleClick = ({ target }) => {
   if (queue.containsTwoFlippedCards() && queue.containsTwoCardsOfSameKind()) {
     setTimeout(() => {
       queue.hideEqualCards();
-      queue.makeDefeatedHeroOpaque();
+      makeDefeatedHeroOpaque(queue.cards);
       queue.clear();
       if (++pairsCounter === 6) {
         endGame();
