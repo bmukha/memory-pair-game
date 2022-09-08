@@ -23,17 +23,89 @@ const cardsWrapper = document.querySelector('.cards-wrapper');
 const infoWrapper = document.querySelector('.info-wrapper');
 const opponents = document.querySelector('.opponents');
 const message = document.querySelector('.message');
-let stack;
+// let queue;
 let pairsCounter;
 let movesCounter;
 let lastCardClickedId;
 let usedHeroes;
 
+const queue = {
+  cards: [],
+  isEmpty() {
+    return this.cards.length === 0;
+  },
+  isFull() {
+    return this.cards.length > 1;
+  },
+  clear() {
+    this.cards = [];
+  },
+  addCard(card) {
+    this.cards.push(card);
+  },
+  deleteOldestCard() {
+    this.cards.shift();
+  },
+  unflipAndDeleteOldestCard() {
+    this.cards[0]?.closest('.flipper').classList.remove('is-flipped');
+    this.cards.shift();
+  },
+  unflipYoungestCardAfterTwoSeconds() {
+    setTimeout(() => {
+      this.cards[this.cards.length - 1]
+        ?.closest('.flipper')
+        .classList.remove('is-flipped');
+    }, 2000);
+  },
+  unflipAndDeleteOldestCardAfterTwoSeconds() {
+    setTimeout(() => {
+      this.unflipAndDeleteOldestCard();
+    }, 2000);
+  },
+  print() {
+    console.log(
+      this.cards.map(
+        (card) => card?.closest('.flip-container').dataset.hero || 'fuck'
+      )
+    );
+  },
+  isCardFlipped(card) {
+    return card?.closest('.flipper').classList.contains('is-flipped');
+  },
+  containsTwoFlippedCards() {
+    return (
+      this.isCardFlipped(this.cards[0]) && this.isCardFlipped(this.cards[1])
+    );
+  },
+  containsTwoCardsOfSameKind() {
+    return (
+      this.cards[0].closest('.flip-container').dataset.hero ===
+        this.cards[1].closest('.flip-container').dataset.hero &&
+      this.cards[0].closest('.flip-container').dataset.id !==
+        this.cards[1].closest('.flip-container').dataset.id
+    );
+  },
+  hideEqualCards() {
+    this.cards.forEach((card) =>
+      card.closest('.flipper').classList.add('hidden')
+    );
+  },
+  makeDefeatedHeroOpaque() {
+    const defeatedHero = document.querySelector(
+      `[data-hero-list="${
+        this.cards[0].closest('.flip-container').dataset.hero
+      }"]`
+    );
+    defeatedHero.classList.add('opaque');
+    defeatedHero.lastElementChild.classList.remove('hidden');
+  },
+};
+
 const init = () => {
   shuffle(allHeroes);
   usedHeroes = [...allHeroes.slice(4), ...allHeroes.slice(4)];
   shuffle(usedHeroes);
-  stack = [];
+  queue.clear;
   pairsCounter = 0;
   movesCounter = 0;
   lastCardClickedId = -1;
@@ -72,97 +144,42 @@ const endGame = () => {
   message.innerText = `Congratulation! You won in ${movesCounter} moves!`;
 };
 
-const isStackFull = (stack) => stack.length === 3;
-const isClickedItemIsACard = (item) => item.classList.contains('cardback');
-const addCardToStack = (stack, card) => stack.push(card);
+const isClickedItemACard = (item) => item.classList.contains('cardback');
 const flipCard = (card) => card.closest('.flipper').classList.add('is-flipped');
-const unflipCard = (card) =>
-  card.closest('.flipper').classList.remove('is-flipped');
-const deleteFirstCardInStack = (stack) => stack.shift();
-const isThereAPairOfCardsInStack = (stack) => stack.length === 2;
-const areTwoCardsInStackEqual = (stack) => {
-  return (
-    stack[0].closest('.flip-container').dataset.hero ===
-    stack[1].closest('.flip-container').dataset.hero
-  );
-};
-const areBothCardsFlipped = (card1, card2) => {
-  return (
-    card1.closest('.flipper').classList.contains('is-flipped') &&
-    card2.closest('.flipper').classList.contains('is-flipped')
-  );
-};
-
-const areTwoCardsIdentical = (cardOne, cardTwo) => {
-  return (
-    cardOne?.closest('.flip-container').dataset.id ===
-    cardTwo.closest('.flip-container').dataset.id
-  );
-};
-
-const hideEqualCards = (stack) => {
-  stack.forEach((item) => item.closest('.flipper').classList.add('hidden'));
-};
-
-const makeHeroInListOpaqueAndDefeated = (stack) => {
-  const defeatedHero = document.querySelector(
-    `[data-hero-list="${stack[1].closest('.flip-container').dataset.hero}"]`
-  );
-  defeatedHero.classList.add('opaque');
-  defeatedHero.lastElementChild.classList.remove('hidden');
-};
-
-const clearStack = (stack) => (stack = []);
+const unflipCardAfterTwoSeconds = (card) =>
+  setTimeout(() => {
+    card.closest('.flipper').classList.remove('is-flipped');
+    // console.log('removed');
+  }, 2000);
 
 const handleClick = ({ target }) => {
-  if (isClickedItemIsACard(target)) {
-    movesCounter++;
-    if (
-      lastCardClickedId === target.closest('.flip-container').dataset.id &&
-      lastCardClickedId ===
-        stack[stack.length - 1].closest('.flip-container').dataset.id
-    ) {
-      console.log('Same card');
-    } else {
-      addCardToStack(stack, target);
-      lastCardClickedId = target.closest('.flip-container').dataset.id;
-    }
-    flipCard(target);
-    if (isStackFull(stack)) {
-      unflipCard(stack[0]);
-      deleteFirstCardInStack(stack);
-    }
-    if (isThereAPairOfCardsInStack(stack)) {
-      if (
-        areTwoCardsInStackEqual(stack) &&
-        areBothCardsFlipped(stack[stack.length - 1], stack[stack.length - 2])
-      ) {
-        setTimeout(() => {
-          hideEqualCards(stack);
-          makeHeroInListOpaqueAndDefeated(stack);
-          clearStack(stack);
-        }, 1000);
-        if (++pairsCounter === 6) {
-          endGame();
-        }
-      } else {
-        stack.forEach((item) =>
-          setTimeout(() => {
-            unflipCard(item);
-          }, 1000)
-        );
-        clearStack(stack);
-      }
-    }
+  if (!isClickedItemACard(target)) return;
+  movesCounter++;
+  if (queue.isFull()) {
+    console.log('queue full');
+    queue.unflipAndDeleteOldestCard();
   }
-  console.log(`moves: ${movesCounter}`);
-  console.log(`pairs: ${pairsCounter}`);
-  console.log(
-    stack.map((item) => item.closest('.flip-container').dataset.hero)
-  );
+  flipCard(target);
+  queue.addCard(target);
+  unflipCardAfterTwoSeconds(target);
+  if (queue.containsTwoFlippedCards() && queue.containsTwoCardsOfSameKind()) {
+    console.log('same!!!');
+    setTimeout(() => {
+      queue.hideEqualCards();
+      queue.makeDefeatedHeroOpaque();
+      queue.clear();
+    }, 700);
+  }
+  // else {
+  //   queue.unflipAndDeleteOldestCard();
+  //   queue.addCard(target);
+  //   flipCard(target);
+  //   unflipCardAfterTwoSeconds(target);
+  // }
+
+  queue.print();
 };
 
 document.addEventListener('DOMContentLoaded', init);
 document.querySelector('.try-again').addEventListener('click', init);
-
 cardsWrapper.addEventListener('click', handleClick);
